@@ -10,7 +10,8 @@
             "includePath": [
                 "/home/hwthinker/Documents/PlatformIO/Projects/LORA-RA02-ESP32/include",
                 "/home/hwthinker/Documents/PlatformIO/Projects/LORA-RA02-ESP32/src",
-                "/home/hwthinker/Documents/PlatformIO/Projects/LORA-RA02-ESP32/.pio/libdeps/lora-ra02-esp32/LoRa/src",
+                "/home/hwthinker/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
+                "/home/hwthinker/Documents/PlatformIO/Projects/LORA-RA02-ESP32/.pio/libdeps/01-sender/LoRa/src",
                 "/home/hwthinker/.platformio/packages/framework-arduinoespressif32/libraries/SPI/src",
                 "/home/hwthinker/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/newlib/platform_include",
                 "/home/hwthinker/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/freertos/include",
@@ -239,7 +240,6 @@
                 "/home/hwthinker/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                 "/home/hwthinker/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                 "/home/hwthinker/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
-                "/home/hwthinker/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                 ""
             ],
             "browse": {
@@ -247,7 +247,8 @@
                 "path": [
                     "/home/hwthinker/Documents/PlatformIO/Projects/LORA-RA02-ESP32/include",
                     "/home/hwthinker/Documents/PlatformIO/Projects/LORA-RA02-ESP32/src",
-                    "/home/hwthinker/Documents/PlatformIO/Projects/LORA-RA02-ESP32/.pio/libdeps/lora-ra02-esp32/LoRa/src",
+                    "/home/hwthinker/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
+                    "/home/hwthinker/Documents/PlatformIO/Projects/LORA-RA02-ESP32/.pio/libdeps/01-sender/LoRa/src",
                     "/home/hwthinker/.platformio/packages/framework-arduinoespressif32/libraries/SPI/src",
                     "/home/hwthinker/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/newlib/platform_include",
                     "/home/hwthinker/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/freertos/include",
@@ -476,7 +477,6 @@
                     "/home/hwthinker/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                     "/home/hwthinker/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                     "/home/hwthinker/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
-                    "/home/hwthinker/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                     ""
                 ]
             },

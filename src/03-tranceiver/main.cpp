@@ -25,7 +25,7 @@ void setup() {
   // Setup LoRa
   LoRa.setPins(LORA_CS, LORA_RST, LORA_DIO0);
   
-  if (!LoRa.begin(433E6)) {
+  if (!LoRa.begin(915E6)) {
     Serial.println("LoRa initialization failed!");
     while (1);
   }
