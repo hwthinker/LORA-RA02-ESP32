@@ -2,69 +2,107 @@
 #include <SPI.h>
 #include <LoRa.h>
 
-// Definisi pin VSPI untuk LoRa
-#define LORA_SCK 18    // VSPI SCK
-#define LORA_MISO 19   // VSPI MISO
-#define LORA_MOSI 23   // VSPI MOSI
-#define LORA_CS 5      // VSPI CS
-#define LORA_RST 14    // Bisa diganti
-#define LORA_DIO0 26   // Bisa diganti
+// Define pin yang digunakan
+#define SCK 18
+#define MISO 19
+#define MOSI 23
+#define SS 5
+#define RST 14
+#define DI0 26
+#define BAND 433E6
 
-// Counter untuk paket
+// Variable untuk counter
 int counter = 0;
+String outgoing;              // outgoing message
+byte msgCount = 0;            // count of outgoing messages
+byte localAddress = 0xBB;     // address of this device
+byte destination = 0xFF;      // destination to send to
 
 void setup() {
   // Inisialisasi Serial Monitor
-  Serial.begin(115200);
+  Serial.begin(9600);
   while (!Serial);
-  Serial.println("LoRa Test with VSPI");
-  
-  // Konfigurasi VSPI
-  SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_CS);
-  
-  // Setup LoRa
-  LoRa.setPins(LORA_CS, LORA_RST, LORA_DIO0);
-  
-  if (!LoRa.begin(915E6)) {
-    Serial.println("LoRa initialization failed!");
+  Serial.println("LoRa Transceiver");
+
+  // Configure pins
+  LoRa.setPins(SS, RST, DI0);
+
+  // Inisialisasi LoRa
+  if (!LoRa.begin(BAND)) {
+    Serial.println("Starting LoRa failed!");
     while (1);
   }
-  
-  // Konfigurasi tambahan LoRa (opsional)
-  LoRa.setSpreadingFactor(7);     // range 6-12
-  LoRa.setSignalBandwidth(125E3); // 125kHz
-  LoRa.setCodingRate4(5);         // 4/5
-  LoRa.setTxPower(20);            // 20dBm
-  
-  Serial.println("LoRa initialization successful!");
+
+  // Set parameters LoRa
+  LoRa.setSpreadingFactor(7);
+  LoRa.setSignalBandwidth(125E3);
+  LoRa.setCodingRate4(5);
+  LoRa.setPreambleLength(8);
+  LoRa.enableCrc();
+
+  Serial.println("LoRa Initializing OK!");
+}
+
+void sendMessage(String outgoing) {
+  LoRa.beginPacket();                   // Start packet
+  LoRa.write(destination);              // Add destination address
+  LoRa.write(localAddress);             // Add sender address
+  LoRa.write(msgCount);                 // Add message ID
+  LoRa.write(outgoing.length());        // Add payload length
+  LoRa.print(outgoing);                 // Add payload
+  LoRa.endPacket();                     // Finish packet and send it
+  msgCount++;                           // Increment message ID
+}
+
+void onReceive(int packetSize) {
+  if (packetSize == 0) return;          // If there's no packet, return
+
+  // Read packet header bytes:
+  int recipient = LoRa.read();          // Recipient address
+  byte sender = LoRa.read();            // Sender address
+  byte incomingMsgId = LoRa.read();     // Incoming msg ID
+  byte incomingLength = LoRa.read();    // Incoming msg length
+
+  String incoming = "";                  // Payload of packet
+
+  while (LoRa.available()) {            // Can't use readString() in callback
+    incoming += (char)LoRa.read();      // Add bytes one by one
+  }
+
+  if (incomingLength != incoming.length()) {   // Check length for error
+    Serial.println("Error: Message length does not match length");
+    return;
+  }
+
+  // If message is not for this device, ignore it
+  if (recipient != localAddress && recipient != 0xFF) {
+    Serial.println("This message is not for me.");
+    return;
+  }
+
+  // Print received message
+  Serial.println("Received from: 0x" + String(sender, HEX));
+  Serial.println("Message ID: " + String(incomingMsgId));
+  Serial.println("Message length: " + String(incomingLength));
+  Serial.println("Message: " + incoming);
+  Serial.println("RSSI: " + String(LoRa.packetRssi()));
+  Serial.println("Snr: " + String(LoRa.packetSnr()));
+  Serial.println();
 }
 
 void loop() {
-  // Kirim paket
-  Serial.print("Sending packet: ");
-  Serial.println(counter);
-
-  // Mulai pengiriman
-  LoRa.beginPacket();
-  LoRa.print("Hello LoRa #");
-  LoRa.print(counter);
-  LoRa.endPacket();
-
-  counter++;
-
-  // Cek paket masuk
-  int packetSize = LoRa.parsePacket();
-  if (packetSize) {
-    Serial.print("Received packet: '");
-    
-    // Baca paket
-    while (LoRa.available()) {
-      Serial.print((char)LoRa.read());
-    }
-    
-    Serial.print("' with RSSI ");
-    Serial.println(LoRa.packetRssi());
+  // Setiap 5 detik, kirim pesan
+  if (millis() % 5000 == 0) {
+    String message = "Counter: " + String(counter);
+    sendMessage(message);
+    Serial.println("Sending: " + message);
+    counter++;
+    delay(1);  // Prevent sending multiple times in same millisecond
   }
 
-  delay(5000);
+  // Parse any received packets
+  int packetSize = LoRa.parsePacket();
+  if (packetSize) {
+    onReceive(packetSize);
+  }
 }

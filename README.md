@@ -1,3 +1,154 @@
+# Wiring ESP32 Lora RA-02
+
+Saya akan membuatkan tabel koneksi wiring antara ESP32 DOIT DevKit dan modul LoRa.
+
+| ESP32 DOIT | LoRa Module | Fungsi                  |
+| ---------- | ----------- | ----------------------- |
+| 3.3V       | VCC/3.3V    | Power                   |
+| GND        | GND         | Ground                  |
+| GPIO 18    | SCK         | Clock                   |
+| GPIO 19    | MISO        | Data dari LoRa ke ESP32 |
+| GPIO 23    | MOSI        | Data dari ESP32 ke LoRa |
+| GPIO 5     | NSS/SS      | Chip Select             |
+| GPIO 14    | RST         | Reset                   |
+| GPIO 26    | DIO0        | Interrupt               |
+
+Beberapa catatan penting:
+1. Pastikan menggunakan power 3.3V, bukan 5V karena modul LoRa bekerja pada tegangan 3.3V
+2. Koneksi ini menggunakan protokol SPI (Serial Peripheral Interface)
+3. Pin-pin yang disebutkan di atas adalah standar yang umum digunakan, namun bisa dikonfigurasi ulang sesuai kebutuhan
+4. Pastikan semua koneksi terpasang dengan benar untuk menghindari kerusakan pada modul
+
+
+
+## Bagian Sender
+
+```c++
+//lora library by Sandeep Mistry
+// lora Sender 915MHz V2.1-1.6
+// Modified by HwThinker
+#include <SPI.h>
+#include <LoRa.h>
+#include <Wire.h>  // Only needed for Arduino 1.6.5 and earlier
+
+#define SCK     18   
+#define MISO    19   
+#define MOSI    23   
+#define SS      5   
+#define RST     14  
+#define DI0     26   
+#define BAND    433E6
+
+// #define LED_BUILTIN 25
+
+int counter = 0;
+int state = 0;
+
+
+void setup() {
+  // pinMode(LED_BUILTIN, OUTPUT);
+
+  Serial.begin(9600);
+  while (!Serial); //If just the the basic function, must connect to a computer
+
+  SPI.begin(SCK, MISO, MOSI, SS);
+  LoRa.setPins(SS, RST, DI0);
+  Serial.println("LoRa Sender");
+
+  if (!LoRa.begin(BAND)) {
+    Serial.println("Starting LoRa failed!");
+    while (1);
+  }
+  Serial.println("LoRa Initial OK!");
+}
+
+void loop() {
+
+  Serial.print("Sending packet: ");
+  Serial.println(counter);
+
+  // send packet
+  LoRa.beginPacket();
+  LoRa.print("hello ");
+  LoRa.print(counter);
+  LoRa.endPacket();
+
+  counter++;
+  delay(2200);
+  //  digitalWrite(LED_BUILTIN, (state) ? HIGH : LOW);
+  //  state = !state;
+  // digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+
+}
+```
+
+## 
+
+## Bagian Receiver
+
+```c++
+
+#include <Arduino.h>
+#include <SPI.h>
+#include <LoRa.h>
+
+#define SCK     18    
+#define MISO    19   
+#define MOSI    23  
+#define SS      5   
+#define RST     14  
+#define DI0     26   
+#define BAND    433E6
+
+// Pin LED
+// #define LED_PIN 25
+
+void setup()
+{
+  // Konfigurasi pin LED
+  // pinMode(LED_PIN, OUTPUT);
+  // digitalWrite(LED_PIN, LOW); // Mulai dengan LED mati
+
+  Serial.begin(9600);
+  while (!Serial)
+    ;
+
+  // Konfigurasi pin LoRa
+  LoRa.setPins(SS, RST, DI0);
+
+  // Inisialisasi LoRa
+  if (!LoRa.begin(BAND))
+  {
+    Serial.println("Gagal menginisialisasi LoRa");
+    while (1)
+      ;
+  }
+  Serial.println("LoRa inisialisasi berhasil!");
+}
+
+void loop()
+{
+  // Cek apakah ada paket yang diterima
+  int packetSize = LoRa.parsePacket();
+  if (packetSize)
+  {
+    String receivedMessage = "";
+
+    while (LoRa.available())
+    {
+      receivedMessage += (char)LoRa.read();
+    }
+
+    Serial.print("Pesan diterima: ");
+    Serial.println(receivedMessage);
+    // digitalWrite(LED_PIN,!digitalRead(LED_PIN));
+  }
+}
+
+```
+
+## 
+
 # Konfigurasi ESP32 DoiT Devkit V1
 
 Untuk melakukan konfigurasi ESP32 di Arduino IDE, ikuti langkah-langkah berikut:
@@ -77,84 +228,6 @@ Berikut adalah prosedur yang harus diikuti. Hal ini berguna terutama jika Anda m
 5. Menjalankan Program:
    - Setelah program berhasil diunggah, tekan tombol EN (Reset) sekali lagi untuk menjalankan program yang baru saja Anda download ke ESP32.
 
-# Wiring ESP32 Lora RA-02
-
-![Lora RA-02](assets/Lora RA-02.png)
-
-## Testing Lora
-Berikut Source Code untuk testing 2 lora
-
-```c++
-#include <Arduino.h>
-#include <SPI.h>
-#include <LoRa.h>
-
-// Definisi pin VSPI untuk LoRa
-#define LORA_SCK 18    // VSPI SCK
-#define LORA_MISO 19   // VSPI MISO
-#define LORA_MOSI 23   // VSPI MOSI
-#define LORA_CS 5      // VSPI CS
-#define LORA_RST 14    // Bisa diganti
-#define LORA_DIO0 26   // Bisa diganti
-
-// Counter untuk paket
-int counter = 0;
-
-void setup() {
-  // Inisialisasi Serial Monitor
-  Serial.begin(115200);
-  while (!Serial);
-  Serial.println("LoRa Test with VSPI");
-
-  // Konfigurasi VSPI
-  SPI.begin(LORA_SCK, LORA_MISO, LORA_MOSI, LORA_CS);
-
-  // Setup LoRa
-  LoRa.setPins(LORA_CS, LORA_RST, LORA_DIO0);
-
-  if (!LoRa.begin(433E6)) {
-    Serial.println("LoRa initialization failed!");
-    while (1);
-  }
-
-  // Konfigurasi tambahan LoRa (opsional)
-  LoRa.setSpreadingFactor(7);     // range 6-12
-  LoRa.setSignalBandwidth(125E3); // 125kHz
-  LoRa.setCodingRate4(5);         // 4/5
-  LoRa.setTxPower(20);            // 20dBm
-
-  Serial.println("LoRa initialization successful!");
-}
-
-void loop() {
-  // Kirim paket
-  Serial.print("Sending packet: ");
-  Serial.println(counter);
-
-  // Mulai pengiriman
-  LoRa.beginPacket();
-  LoRa.print("Hello LoRa #");
-  LoRa.print(counter);
-  LoRa.endPacket();
-
-  counter++;
-
-  // Cek paket masuk
-  int packetSize = LoRa.parsePacket();
-  if (packetSize) {
-    Serial.print("Received packet: '");
-    // Baca paket
-    while (LoRa.available()) {
-      Serial.print((char)LoRa.read());
-    }
-    
-    Serial.print("' with RSSI ");
-    Serial.println(LoRa.packetRssi());
-  }
-
-  delay(5000);
-}
-```
 ## 💡NOTE:
 
 - Note: LED pada chip ESP32 hanya indikator komunikasi, bukan indikator daya maupun User LED; tidak menyala jika belum ada program yang akses serial.

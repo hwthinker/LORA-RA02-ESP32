@@ -2,12 +2,12 @@
 #include <SPI.h>
 #include <LoRa.h>
 
-#define SCK     18    // GPIO5  -- lora SCK
-#define MISO    19   // GPIO19 -- lora MISO
-#define MOSI    23   // GPIO27 -- lora MOSI
-#define SS      5   // GPIO18 -- lora CS
-#define RST     14   // GPIO14 -- RESET (If Lora does not work, replace it with GPIO14)
-#define DI0     26   // GPIO26 -- IRQ(Interrupt Request)
+#define SCK     18    
+#define MISO    19   
+#define MOSI    23  
+#define SS      5   
+#define RST     14  
+#define DI0     26   
 #define BAND    433E6
 
 // Pin LED
